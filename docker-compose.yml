@@ -16,6 +16,16 @@ services:
       - digilib
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Ihre bestehenden Services (Dashboard = eXist-db Backend)
   edirom-online-backend:
@@ -32,6 +42,17 @@ services:
       - "8080"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/exist/ || exit 1"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Edirom Frontend (nginx)
   edirom-online-frontend:
@@ -45,6 +66,10 @@ services:
     # Keine externen Ports mehr - nur intern erreichbar
     expose:
       - "80"
+    environment:
+      # Falls das Frontend konfigurierbare Backend-URLs unterstützt
+      - BACKEND_URL=http://localhost/exist
+      - API_BASE_URL=http://localhost
     networks:
       - app-network
 
